@@ -1,6 +1,7 @@
 # -*- mode: python -*-
 
 import pkg_resources
+import site
 
 block_cipher = None
 
@@ -30,7 +31,9 @@ def Entrypoint(dist, group, name, **kwargs):
     kwargs.setdefault('win_private_assemblies', False)
     kwargs.setdefault('noarchive', False)
 
-    kwargs.setdefault('pathex', [])
+    spdir = site.getsitepackages()[-1]
+    label_studio_dir = os.path.join(spdir, 'label_studio')
+    kwargs.setdefault('pathex', [label_studio_dir])
     # get the entry point
     ep = pkg_resources.get_entry_info(dist, group, name)
     # insert path of the egg at the verify front of the search path

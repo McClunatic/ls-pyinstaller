@@ -1,23 +1,24 @@
 import os
+import pathlib
+import site
+
+from typing import Iterator, Union
 
 from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
+# Make sure label_studio settings are visible for the django hook
+os.environ.setdefault(
+    'DJANGO_SETTINGS_MODULE',
+    'label_studio.core.settings.label_studio',
+)
+
+# Load datas based on the MANIFEST.in for label_studio
 datas = []
 for dirname in ('lsf', 'react-app', 'dm'):
     datas += collect_data_files(
         'label_studio',
         subdir=os.path.join('frontend', 'dist', dirname)
     )
-
-datas += collect_data_files(
-    'label_studio',
-    includes=['*.html'],
-)
-
-datas += collect_data_files(
-    'label_studio',
-    subdir='annotation_templates',
-)
 
 datas += collect_data_files(
     'label_studio',
@@ -88,6 +89,7 @@ datas += collect_data_files(
     includes=['*.ini'],
 )
 
+# Collect hidden imports encountered in testing
 hiddenimports = collect_submodules('label_studio.core.settings')
 hiddenimports += collect_submodules('corsheaders')
 hiddenimports += collect_submodules('django_extensions')
@@ -96,9 +98,53 @@ hiddenimports += collect_submodules('rules')
 hiddenimports += collect_submodules('annoying')
 hiddenimports += collect_submodules('rest_framework_swagger')
 hiddenimports += collect_submodules('drf_generators')
+hiddenimports += collect_submodules('django_user_agents')
+hiddenimports += collect_submodules('drf_yasg')
 
+# Load embedded django applications as top-level modules
+for mod in (
+    'core',
+    'users',
+    'organizations',
+    'data_import',
+    'data_export',
+    'projects',
+    'tasks',
+    'data_manager',
+    'io_storages',
+    'ml',
+    'webhooks',
+    'core.middleware',
+):
+    ls_submodules = collect_submodules(mod)
+    hiddenimports += ls_submodules
+
+# Add further data encountered as part of testing
 datas += collect_data_files('coreschema', include_py_files=True)
 datas += collect_data_files('rest_framework', include_py_files=True)
 datas += collect_data_files('label_studio.core', include_py_files=True)
-datas += collect_data_files('users', include_py_files=True)
 datas += collect_data_files('boxing', includes=['*.json'])
+
+# ...including fake top-level inside label_studio
+datas += collect_data_files('data_manager.actions', include_py_files=True)
+
+# Finally, get templates for django from main and label_studio-embedded apps
+sp = pathlib.Path(site.getsitepackages()[-1])
+ls = sp.joinpath('label_studio')
+
+ls_templates = ls.joinpath('templates').rglob('*.html')
+datas += [(str(tpl), str(tpl.relative_to(ls).parent)) for tpl in ls_templates]
+
+templates = []
+for mod in (
+    'data_manager',
+    'organizations',
+    'projects',
+    'users',
+):
+    path = ls.joinpath(mod)
+    app_tpls = [tpl for tpl in path.rglob('*.html')]
+    rel_tpls = [tpl.relative_to(path).parent for tpl in app_tpls]
+    templates += list(zip(app_tpls, rel_tpls))
+
+datas += [(str(a), str(r)) for a, r in templates]
