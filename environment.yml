@@ -1,0 +1,10 @@
+name: ls
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - gdal=3.1.*
+  - pyinstaller>=4
+  - pip
+  - pip:
+    - label-studio
