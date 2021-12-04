@@ -150,5 +150,8 @@ for mod in (
 datas += [(str(a), str(r)) for a, r in templates]
 
 # Try to get templatetags available for import as datas
-datas += collect_data_files('core.templatetags', include_py_files=True)
 datas += collect_data_files('projects.templatetags', include_py_files=True)
+
+# For some reason the below finds .git/ files?'
+# UPDATE: patch for __init__.py
+datas += collect_data_files('core.templatetags', include_py_files=True)
