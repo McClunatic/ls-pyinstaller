@@ -3,6 +3,7 @@ channels:
   - defaults
   - conda-forge
 dependencies:
+  - coverage
   - gdal=3.1.*
   - pyinstaller>=4
   - pip
