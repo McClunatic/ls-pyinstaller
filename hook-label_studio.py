@@ -15,17 +15,21 @@ os.environ.setdefault(
 # Load datas based on the MANIFEST.in for label_studio
 datas = []
 for dirname in ('lsf', 'react-app', 'dm'):
-    datas += collect_data_files(
+    frontends = collect_data_files(
         'label_studio',
         subdir=os.path.join('frontend', 'dist', dirname)
     )
+    datas += [
+        (src, dst.replace('label_studio' + os.sep, ''))
+        for src, dst in frontends
+    ]
 
 datas += collect_data_files(
     'label_studio',
     subdir='annotation_templates',
 )
 
-for dirname in ('static', 'static_build'):
+for dirname in ('static'):
     datas += collect_data_files(
         'label_studio',
         subdir=os.path.join('core', dirname),
@@ -155,3 +159,13 @@ datas += collect_data_files('projects.templatetags', include_py_files=True)
 # For some reason the below finds .git/ files?'
 # UPDATE: patch for __init__.py
 datas += collect_data_files('core.templatetags', include_py_files=True)
+
+# Make sure static_build ends up at /static
+statics = collect_data_files('core', subdir='static_build')
+datas += statics
+
+# TODO:
+#  - EDITOR_ROOT
+#  - DM_ROOT
+#  - REACT_APP_ROOT
+#  - MEDIA_ROOT
