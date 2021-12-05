@@ -2,8 +2,6 @@ import os
 import pathlib
 import site
 
-from typing import Iterator, Union
-
 from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
 # Make sure label_studio settings are visible for the django hook
@@ -28,12 +26,6 @@ datas += collect_data_files(
     'label_studio',
     subdir='annotation_templates',
 )
-
-for dirname in ('static'):
-    datas += collect_data_files(
-        'label_studio',
-        subdir=os.path.join('core', dirname),
-    )
 
 datas += collect_data_files(
     'label_studio',
@@ -157,15 +149,9 @@ datas += [(str(a), str(r)) for a, r in templates]
 datas += collect_data_files('projects.templatetags', include_py_files=True)
 
 # For some reason the below finds .git/ files?'
-# UPDATE: patch for __init__.py
+# UPDATE: core.templatetags missing __init__.py, requires patch
 datas += collect_data_files('core.templatetags', include_py_files=True)
 
-# Make sure static_build ends up at /static
-statics = collect_data_files('core', subdir='static_build')
-datas += statics
-
-# TODO:
-#  - EDITOR_ROOT
-#  - DM_ROOT
-#  - REACT_APP_ROOT
-#  - MEDIA_ROOT
+# Add static and static_build files
+datas += collect_data_files('core', subdir='static_build')
+datas += collect_data_files('core', subdir='static')
